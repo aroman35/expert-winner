@@ -26,7 +26,7 @@ namespace ExpertWinnerLang.Linker
             {
                 FunctionsMap.TryAdd(
                     functionType.GetCustomAttribute<FunctionAttribute>()!.Name,
-                    Activator.CreateInstance(functionType) as IFunction);
+                    (IFunction)Activator.CreateInstance(functionType)!);
             }
         }
 

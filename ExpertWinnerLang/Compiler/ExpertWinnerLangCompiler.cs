@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+using ExpertWinnerLang.Extensions;
 using ExpertWinnerLang.InputParser;
 
 namespace ExpertWinnerLang.Compiler
@@ -17,7 +19,41 @@ namespace ExpertWinnerLang.Compiler
             Output = new Queue<QlToken>();
         }
 
-        public void Compile(Queue<QlToken> tokens)
+        internal void Compile(string inputFormula, string[] keysArray)
+        {
+            _callStack.Clear();
+            Output.Clear();
+            
+            var formula = ReplaceFinds(inputFormula, keysArray);
+            var specialTokens = new[] { '(', ')', '+', '-', '*', '/', ',' };
+            var tokensStringSource = new List<List<char>>()
+            {
+                new()
+            };
+
+            var chArr = formula.Replace(" ", "").ToArray();
+            var enumerator = chArr.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                var currentToken = enumerator.Current;
+                if (specialTokens.Contains((char)currentToken))
+                {
+                    tokensStringSource.Add(new List<char>());
+                    tokensStringSource.Last().Add((char)currentToken);
+                    tokensStringSource.Add(new List<char>());
+                }
+                else
+                {
+                    tokensStringSource.Last().Add((char)currentToken);
+                }
+            }
+
+            var tokenStrings = tokensStringSource.Where(x => x.Any()).ToQueue(x => new QlToken(x.ToArray()));
+
+            CompileTokens(tokenStrings);
+        }
+
+        private void CompileTokens(Queue<QlToken> tokens)
         {
             while (tokens.TryDequeue(out var token))
             {
@@ -59,7 +95,7 @@ namespace ExpertWinnerLang.Compiler
                     if (!_callStack.Any())
                         throw new Exception("\"(\" is missing");
                     var _ = _callStack.Pop();
-                    if (_callStack.Peek().Type == TokenType.Function)
+                    if (_callStack.TryPeek(out var funcToken) && funcToken.Type == TokenType.Function)
                         Output.Enqueue(_callStack.Pop());
                 }
             }
@@ -70,6 +106,23 @@ namespace ExpertWinnerLang.Compiler
                     throw new Exception("\")\" is missing");
                 Output.Enqueue(existingToken);
             }
+        }
+        
+        private static string ReplaceFinds(string formula, string[] keys)
+        {
+            var pattern = "([']([a-zA-z0-9]*)['])|([\"]([a-zA-z0-9]*)[\"])";
+            var regex = Regex.Match(formula, pattern);
+            var hasFinds = regex.Success;
+            while (hasFinds)
+            {
+                if (!regex.Success) continue;
+                var formulated = $"select({Array.IndexOf(keys, regex.Value.Replace("'", "").Replace("\"", ""))})";
+                formula = Regex.Replace(formula, $"({regex.Value})", formulated);
+                regex = regex.NextMatch();
+                hasFinds = regex.Success;
+            }
+
+            return formula;
         }
     }
 }

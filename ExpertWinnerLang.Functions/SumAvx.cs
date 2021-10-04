@@ -5,7 +5,7 @@ using ExpertWinnerLang.Linker;
 namespace ExpertWinnerLang.Functions
 {
     [Function("sum")]
-    public class SumAvx : IFunction<double, double>
+    public class SumAvx : IFunction
     {
         public unsafe double Execute(params double[] argument)
         {
