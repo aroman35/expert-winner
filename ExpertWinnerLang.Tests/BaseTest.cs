@@ -12,6 +12,8 @@ namespace ExpertWinnerLang.Tests
     public class BaseTest
     {
         private readonly Dictionary<string, double>[] _sourceData;
+        private readonly ExpertWinnerLangCompiler _compiler;
+        private readonly ExpertWinnerLangRuntime _runtime;
 
         public BaseTest()
         {
@@ -34,14 +36,15 @@ namespace ExpertWinnerLang.Tests
             };
             
             FunctionsSet.MapAssembly(typeof(Std).Assembly);
+            _compiler = new ExpertWinnerLangCompiler();
+            _runtime = new ExpertWinnerLangRuntime(_compiler);
         }
         
         [Fact]
-        public void ConvertSourceToOutput()
+        public void CombinedFormulaTest()
         {
-            var compiler = new ExpertWinnerLangCompiler();
-            var runtime = new ExpertWinnerLangRuntime(compiler);
-            var result = runtime.Execute(_sourceData, "(sum('total') * 2 + 39) / 4");
+            var formula = "(sum('total') * 2 + 39) / 4";
+            var result = _runtime.Execute(_sourceData, formula);
             
             result.ShouldBe(25);
         }
@@ -50,9 +53,7 @@ namespace ExpertWinnerLang.Tests
         public void StdTest()
         {
             var formula = "std('result')";
-            var compiler = new ExpertWinnerLangCompiler();
-            var runtime = new ExpertWinnerLangRuntime(compiler);
-            var result = runtime.Execute(_sourceData, formula);
+            var result = _runtime.Execute(_sourceData, formula);
             
             result.ShouldBe(1);
         }

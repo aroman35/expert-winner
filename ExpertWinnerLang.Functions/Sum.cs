@@ -5,12 +5,12 @@ using ExpertWinnerLang.Linker;
 namespace ExpertWinnerLang.Functions
 {
     [Function("sum")]
-    public class SumAvx : IFunction
+    public class Sum : IFunction
     {
         public unsafe double Execute(params double[] argument)
         {
             if (argument.Length == 0)
-                return 0;
+                return double.NaN;
                 
             var vectorSize = 256 / sizeof(double) / 8;
             var accVector = Vector256<double>.Zero;
