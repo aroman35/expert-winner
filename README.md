@@ -10,9 +10,7 @@ public void GetSumOfFirstElements(double[][] inputData)
 {
     var formula = "(sum(select(0))";
     FunctionsSet.MapAssembly(typeof(Std).Assembly); // register your functions globaly
-    ExpertWinnerLangCompiler compiler = new();
-    var runtime = new ExpertWinnerLangRuntime(compiler);
-    var result = runtime.Execute(inputData, formula);
+    var result = ExpertWinner.Execute(inputData, formula);
 }
 ```
 It is also available to use some combinated formulas like ```"(sum('total') * 2 + 39) / 4"```
