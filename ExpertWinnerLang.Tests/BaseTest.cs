@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using ExpertWinnerLang.Compiler;
 using ExpertWinnerLang.Functions.Aggregate;
 using ExpertWinnerLang.Linker;
-using ExpertWinnerLang.Runtime;
 using Shouldly;
 using Xunit;
 
@@ -15,7 +13,6 @@ namespace ExpertWinnerLang.Tests
     {
         private readonly Dictionary<string, double>[] _sourceDataSet;
         private readonly double[][] _data;
-        private readonly ExpertWinnerLangRuntime _runtime;
 
         public BaseTest()
         {
@@ -37,17 +34,14 @@ namespace ExpertWinnerLang.Tests
             };
 
             _data = _sourceDataSet.Select(x => x.Values.ToArray()).ToArray();
-            
             FunctionsSet.MapAssembly(typeof(Std).Assembly);
-            ExpertWinnerLangCompiler compiler = new();
-            _runtime = new ExpertWinnerLangRuntime(compiler);
         }
         
         [Fact]
         public void CombinedFormulaTest()
         {
             var formula = "(sum(select(0)) * 2 + 39) / 4";
-            var result = _runtime.Execute(_data, formula);
+            var result = ExpertWinner.Execute(_data, formula);
             
             result.ShouldBe(25);
         }
@@ -56,7 +50,7 @@ namespace ExpertWinnerLang.Tests
         public void StdTest()
         {
             var formula = "std(select(3))";
-            var result = _runtime.Execute(_data, formula);
+            var result = ExpertWinner.Execute(_data, formula);
             
             result.ShouldBe(1);
         }
@@ -68,7 +62,7 @@ namespace ExpertWinnerLang.Tests
             
             var headers = _sourceDataSet[0].Keys.ToArray();
             formula = ReplaceSelect(formula, headers);
-            var result = _runtime.Execute(_data, formula);
+            var result = ExpertWinner.Execute(_data, formula);
             
             result.ShouldBe(1);
         }
@@ -80,7 +74,7 @@ namespace ExpertWinnerLang.Tests
             
             var headers = _sourceDataSet[0].Keys.ToArray();
             formula = ReplaceSelect(formula, headers);
-            var result = _runtime.Execute(_data, formula);
+            var result = ExpertWinner.Execute(_data, formula);
             
             result.ShouldBe(25);
         }

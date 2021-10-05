@@ -7,7 +7,7 @@ using ExpertWinnerLang.InputParser;
 namespace ExpertWinnerLang.Compiler
 {
     // https://en.wikipedia.org/wiki/Shunting-yard_algorithm
-    public class ExpertWinnerLangCompiler
+    internal class ExpertWinnerLangCompiler
     {
         private readonly Stack<QlToken> _callStack;
         public Queue<QlToken> Output { get; }

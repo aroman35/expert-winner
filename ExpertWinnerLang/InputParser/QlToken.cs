@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ExpertWinnerLang.InputParser
 {
-    public class QlToken
+    internal class QlToken
     {
         private static readonly ICollection<char> Operators = new []{ '+', '-', '*', '/' };
         private static readonly ICollection<char> Specials = new []{ '(', ')' };

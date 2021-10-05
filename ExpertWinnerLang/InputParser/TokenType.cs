@@ -1,6 +1,6 @@
 ﻿namespace ExpertWinnerLang.InputParser
 {
-    public enum TokenType
+    internal enum TokenType
     {
         NaN,
         Function,
