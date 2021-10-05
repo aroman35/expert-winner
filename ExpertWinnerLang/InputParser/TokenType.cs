@@ -6,6 +6,7 @@
         Function,
         Number,
         Operator,
-        Special
+        Brackets,
+        Separator
     }
 }

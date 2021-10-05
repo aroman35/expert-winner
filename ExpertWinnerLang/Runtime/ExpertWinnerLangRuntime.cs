@@ -7,6 +7,7 @@ using ExpertWinnerLang.Linker;
 
 namespace ExpertWinnerLang.Runtime
 {
+    // https://en.wikipedia.org/wiki/Reverse_Polish_notation
     public class ExpertWinnerLangRuntime
     {
         private readonly ExpertWinnerLangCompiler _compiler;

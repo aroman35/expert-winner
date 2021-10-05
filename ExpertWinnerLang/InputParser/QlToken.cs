@@ -6,7 +6,7 @@ namespace ExpertWinnerLang.InputParser
     public class QlToken
     {
         private static readonly ICollection<char> Operators = new []{ '+', '-', '*', '/' };
-        private static readonly ICollection<char> Specials = new []{ '(', ')', ',' };
+        private static readonly ICollection<char> Specials = new []{ '(', ')' };
         public TokenType Type { get; }
         public bool IsHighPriority => Type == TokenType.Operator && Value is "*" or "/";
         public string Value { get; }
@@ -20,7 +20,8 @@ namespace ExpertWinnerLang.InputParser
             Type = value.Length switch
             {
                 1 when Operators.Contains(value[0]) => TokenType.Operator,
-                1 when Specials.Contains(value[0]) => TokenType.Special,
+                1 when Specials.Contains(value[0]) => TokenType.Brackets,
+                1 when value[0] == ',' => TokenType.Separator,
                 _ => int.TryParse(Value, out _) ? TokenType.Number : TokenType.Function
             };
         }

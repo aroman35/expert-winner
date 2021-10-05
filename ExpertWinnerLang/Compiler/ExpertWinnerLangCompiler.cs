@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using ExpertWinnerLang.Exceptions;
 using ExpertWinnerLang.Extensions;
 using ExpertWinnerLang.InputParser;
 
 namespace ExpertWinnerLang.Compiler
 {
-    //https://ru.wikipedia.org/wiki/%D0%90%D0%BB%D0%B3%D0%BE%D1%80%D0%B8%D1%82%D0%BC_%D1%81%D0%BE%D1%80%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%BE%D1%87%D0%BD%D0%BE%D0%B9_%D1%81%D1%82%D0%B0%D0%BD%D1%86%D0%B8%D0%B8
+    // https://en.wikipedia.org/wiki/Shunting-yard_algorithm
     public class ExpertWinnerLangCompiler
     {
         private readonly Stack<QlToken> _callStack;
@@ -71,16 +69,27 @@ namespace ExpertWinnerLang.Compiler
                         _callStack.Push(token);
                         continue;
                     }
-                    case TokenType.Special when token.Value == "(":
+                    case TokenType.Separator:
+                    {
+                        throw new CompilationException("Argument separators are not supported");
+                        while (_callStack.TryPeek(out var specialToken) && specialToken.Value != "(")
+                            Output.Enqueue(_callStack.Pop());
+                        
+                        continue;
+                    }
+                    case TokenType.Brackets when token.Value == "(":
+                    {
+                        Output.Enqueue(new QlToken("sep".ToCharArray()));
                         _callStack.Push(token);
                         continue;
-                    case TokenType.Special when token.Value == ")":
+                    }
+                    case TokenType.Brackets when token.Value == ")":
                     {
                         while (_callStack.TryPeek(out var csToken) && csToken.Value != "(")
                             Output.Enqueue(_callStack.Pop());
-
+                        
                         if (!_callStack.Any())
-                            throw new Exception("\"(\" is missing");
+                            throw new CompilationException("\"(\" is missing");
                         var _ = _callStack.Pop();
                         if (_callStack.TryPeek(out var funcToken) && funcToken.Type == TokenType.Function)
                             Output.Enqueue(_callStack.Pop());
@@ -96,27 +105,9 @@ namespace ExpertWinnerLang.Compiler
             while (_callStack.TryPop(out var existingToken))
             {
                 if (existingToken.Value == "(")
-                    throw new Exception("\")\" is missing");
+                    throw new CompilationException("\")\" is missing");
                 Output.Enqueue(existingToken);
             }
-        }
-
-        // TODO: move to application
-        private static string ReplaceFinds(string formula, string[] keys)
-        {
-            var pattern = "([']([a-zA-z0-9]*)['])|([\"]([a-zA-z0-9]*)[\"])";
-            var regex = Regex.Match(formula, pattern);
-            var hasFinds = regex.Success;
-            while (hasFinds)
-            {
-                if (!regex.Success) continue;
-                var formulated = $"select({Array.IndexOf(keys, regex.Value.Replace("'", "").Replace("\"", ""))})";
-                formula = Regex.Replace(formula, $"({regex.Value})", formulated);
-                regex = regex.NextMatch();
-                hasFinds = regex.Success;
-            }
-
-            return formula;
         }
     }
 }
