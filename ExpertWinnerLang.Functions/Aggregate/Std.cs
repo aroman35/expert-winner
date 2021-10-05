@@ -1,13 +1,15 @@
 using System;
 using System.Linq;
 using ExpertWinnerLang.Linker;
+using ExpertWinnerLang.Linker.Abstractions;
+using ExpertWinnerLang.Linker.Attributes;
 
-namespace ExpertWinnerLang.Functions
+namespace ExpertWinnerLang.Functions.Aggregate
 {
     [Function("std")]
     public class Std : IFunction
     {
-        public double Execute(params double[] argument)
+        public double Execute(double[] argument)
         {
             if (!argument.Any())
                 return double.NaN;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using ExpertWinnerLang.Exceptions;
 using ExpertWinnerLang.Extensions;
 using ExpertWinnerLang.InputParser;
 
@@ -19,84 +20,76 @@ namespace ExpertWinnerLang.Compiler
             Output = new Queue<QlToken>();
         }
 
-        internal void Compile(string inputFormula, string[] keysArray)
+        internal void Compile(string inputFormula)
         {
             _callStack.Clear();
             Output.Clear();
-            
-            var formula = ReplaceFinds(inputFormula, keysArray);
+
             var specialTokens = new[] { '(', ')', '+', '-', '*', '/', ',' };
-            var tokensStringSource = new List<List<char>>()
+            var tokensStringSource = new List<LinkedList<char>>
             {
                 new()
             };
 
-            var chArr = formula.Replace(" ", "").ToArray();
+            var chArr = inputFormula.Replace(" ", "").ToArray();
             var enumerator = chArr.GetEnumerator();
             while (enumerator.MoveNext())
             {
                 var currentToken = enumerator.Current;
                 if (specialTokens.Contains((char)currentToken))
                 {
-                    tokensStringSource.Add(new List<char>());
-                    tokensStringSource.Last().Add((char)currentToken);
-                    tokensStringSource.Add(new List<char>());
+                    tokensStringSource.Add(new LinkedList<char>());
+                    tokensStringSource.Last().AddLast((char)currentToken);
+                    tokensStringSource.Add(new LinkedList<char>());
+                    continue;
                 }
-                else
-                {
-                    tokensStringSource.Last().Add((char)currentToken);
-                }
+
+                tokensStringSource.Last().AddLast((char)currentToken);
             }
 
-            var tokenStrings = tokensStringSource.Where(x => x.Any()).ToQueue(x => new QlToken(x.ToArray()));
+            var tokens = tokensStringSource.Where(x => x.Any()).ToQueue(x => new QlToken(x.ToArray()));
 
-            CompileTokens(tokenStrings);
+            CompileTokens(tokens);
         }
 
         private void CompileTokens(Queue<QlToken> tokens)
         {
             while (tokens.TryDequeue(out var token))
             {
-                if (token.Type == TokenType.Number)
+                switch (token.Type)
                 {
-                    Output.Enqueue(token);
-                    continue;
-                }
-
-                if (token.Type == TokenType.Function)
-                {
-                    _callStack.Push(token);
-                    continue;
-                }
-
-                if (token.Type == TokenType.Operator)
-                {
-                    while (_callStack.TryPeek(out var opPriToken) && opPriToken.Type == TokenType.Operator && opPriToken.IsHighPriority)
+                    case TokenType.Number:
+                        Output.Enqueue(token);
+                        continue;
+                    case TokenType.Function:
+                        _callStack.Push(token);
+                        continue;
+                    case TokenType.Operator:
                     {
-                        Output.Enqueue(_callStack.Pop());
+                        while (_callStack.TryPeek(out var opPriToken) && opPriToken.Type == TokenType.Operator && opPriToken.IsHighPriority)
+                            Output.Enqueue(_callStack.Pop());
+                        _callStack.Push(token);
+                        continue;
                     }
-                    _callStack.Push(token);
-                    continue;
-                }
-
-                if (token.Type == TokenType.Special && token.Value == "(")
-                {
-                    _callStack.Push(token);
-                    continue;
-                }
-
-                if (token.Type == TokenType.Special && token.Value == ")")
-                {
-                    while (_callStack.TryPeek(out var csToken) && csToken.Value != "(")
+                    case TokenType.Special when token.Value == "(":
+                        _callStack.Push(token);
+                        continue;
+                    case TokenType.Special when token.Value == ")":
                     {
-                        Output.Enqueue(_callStack.Pop());
-                    }
+                        while (_callStack.TryPeek(out var csToken) && csToken.Value != "(")
+                            Output.Enqueue(_callStack.Pop());
 
-                    if (!_callStack.Any())
-                        throw new Exception("\"(\" is missing");
-                    var _ = _callStack.Pop();
-                    if (_callStack.TryPeek(out var funcToken) && funcToken.Type == TokenType.Function)
-                        Output.Enqueue(_callStack.Pop());
+                        if (!_callStack.Any())
+                            throw new Exception("\"(\" is missing");
+                        var _ = _callStack.Pop();
+                        if (_callStack.TryPeek(out var funcToken) && funcToken.Type == TokenType.Function)
+                            Output.Enqueue(_callStack.Pop());
+                        break;
+                    }
+                    case TokenType.NaN:
+                        throw new CompilationException($"Invalid token {token}");
+                    default:
+                        throw new CompilationException($"Invalid token {token}");
                 }
             }
 
@@ -107,7 +100,8 @@ namespace ExpertWinnerLang.Compiler
                 Output.Enqueue(existingToken);
             }
         }
-        
+
+        // TODO: move to application
         private static string ReplaceFinds(string formula, string[] keys)
         {
             var pattern = "([']([a-zA-z0-9]*)['])|([\"]([a-zA-z0-9]*)[\"])";

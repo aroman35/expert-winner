@@ -1,13 +1,15 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using ExpertWinnerLang.Linker;
+using ExpertWinnerLang.Linker.Abstractions;
+using ExpertWinnerLang.Linker.Attributes;
 
-namespace ExpertWinnerLang.Functions
+namespace ExpertWinnerLang.Functions.Aggregate
 {
     [Function("sum")]
     public class Sum : IFunction
     {
-        public unsafe double Execute(params double[] argument)
+        public unsafe double Execute(double[] argument)
         {
             if (argument.Length == 0)
                 return double.NaN;

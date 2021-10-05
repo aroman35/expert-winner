@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using ExpertWinnerLang.Compiler;
 using ExpertWinnerLang.Exceptions;
 using ExpertWinnerLang.InputParser;
@@ -17,10 +16,9 @@ namespace ExpertWinnerLang.Runtime
             _compiler = compiler;
         }
 
-        public double Execute(Dictionary<string, double>[] sequences, string formula)
+        public double Execute(IEnumerable<IEnumerable<double>> sequences, string formula)
         {
-            var keysArray = sequences.Select(x => x.Keys.ToArray()).GroupBy(x => x).FirstOrDefault()!.Key;
-            _compiler.Compile(formula, keysArray);
+            _compiler.Compile(formula);
             
             var runtimeStack = new Stack<double[]>();
             while (_compiler.Output.TryDequeue(out var token))
@@ -34,8 +32,8 @@ namespace ExpertWinnerLang.Runtime
                     runtimeStack.Push(GetOperator(token)(leftNumber, rightNumber));
                 if (token.Type == TokenType.Function && runtimeStack.TryPop(out var argument))
                 {
-                    if (token.Value == "select")
-                        runtimeStack.Push(GetSelector()(sequences, argument[0]));
+                    if (FunctionsSet.QueriesMap.TryGetValue(token.Value, out var query))
+                        runtimeStack.Push(query.Execute(sequences, (int)argument[0]));
                     else if (FunctionsSet.FunctionsMap.TryGetValue(token.Value, out var function))
                         runtimeStack.Push(new[] { function.Execute(argument) });
                     else
@@ -56,15 +54,6 @@ namespace ExpertWinnerLang.Runtime
                 case "/": return (a, b) => new []{a[0] / b[0]};
                 default: throw new Exception($"Unknown operator {token.Value}");
             }
-        }
-
-        private Func<Dictionary<string, double>[], double, double[]> GetSelector()
-        {
-            return (sequence, index) =>
-            {
-                var keysArray = sequence.Select(x => x.Keys.ToArray()).GroupBy(x => x).FirstOrDefault()!.Key;
-                return sequence.Select(x => x[keysArray[(int)index]]).ToArray();
-            };
         }
     }
 }

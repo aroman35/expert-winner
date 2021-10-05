@@ -1,11 +1,11 @@
 using System;
 
-namespace ExpertWinnerLang.Linker
+namespace ExpertWinnerLang.Linker.Attributes
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-    public class FunctionAttribute : Attribute
+    public class QueryAttribute : Attribute
     {
-        public FunctionAttribute(string name)
+        public QueryAttribute(string name)
         {
             Name = name;
         }
