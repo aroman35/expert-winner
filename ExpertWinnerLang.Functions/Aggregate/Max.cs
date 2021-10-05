@@ -1,5 +1,4 @@
 using System.Linq;
-using ExpertWinnerLang.Linker;
 using ExpertWinnerLang.Linker.Abstractions;
 using ExpertWinnerLang.Linker.Attributes;
 

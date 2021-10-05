@@ -84,7 +84,7 @@ namespace ExpertWinnerLang.Tests
             
             result.ShouldBe(25);
         }
-        
+
         private static string ReplaceSelect(string formula, string[] keys)
         {
             var pattern = "([']([a-zA-z0-9]*)['])|([\"]([a-zA-z0-9]*)[\"])";
